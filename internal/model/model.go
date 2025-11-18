@@ -16,6 +16,11 @@ const (
 	ViewOfCoverageList
 )
 
+var (
+	KeyOfQuiet1 = tea.KeyCtrlC.String()
+	KeyOfQuiet2 = tea.KeyEsc.String()
+)
+
 type model struct {
 	cfg *internal.Config
 
@@ -73,7 +78,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "ctrl+c", "q":
+		case KeyOfQuiet1, KeyOfQuiet2:
 			m.quitting = true
 			return m, tea.Quit
 		}

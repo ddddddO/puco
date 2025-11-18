@@ -22,7 +22,7 @@ func (c *coveragedListView) update(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "ctrl+c", "q", "esc":
+		case KeyOfQuiet1, KeyOfQuiet2:
 			return m, tea.Quit
 
 		case "enter":

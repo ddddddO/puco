@@ -170,7 +170,7 @@ func (t *selectCoverageFilesView) view(viewHeight int) string {
 	}
 
 	// The footer
-	sb.WriteString("\n(↑↓: move, Space: select, Enter: next, q: quit)\n")
+	sb.WriteString("\n(↑↓: move, Space: select, Enter: next, Esc: quit)\n")
 
 	// Send the UI for rendering
 	return sb.String()

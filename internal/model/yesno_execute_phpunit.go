@@ -33,7 +33,7 @@ func (v *yesnoView) update(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "ctrl+c", "q", "esc":
+		case KeyOfQuiet1, KeyOfQuiet2:
 			return m, tea.Quit
 
 		case "enter":
@@ -133,7 +133,7 @@ func (v *yesnoView) view(width int, cfv *selectCoverageFilesView) string {
 		s.WriteString(v.choices[i])
 		s.WriteString("\n")
 	}
-	s.WriteString("\n(press q to quit)\n")
+	s.WriteString("\n(↑↓: move, Enter: next, Esc: quit)\n")
 
 	return s.String()
 }

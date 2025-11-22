@@ -1,7 +1,9 @@
 package model
 
 import (
+	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -53,6 +55,10 @@ func (c *coveragedListView) view(viewHeight int) string {
 
 	coverages, err := internal.GetCoveragedFilePaths(lvl)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			panic(fmt.Errorf("%s directory did not exist, probably because pcov was not installed.", command.OutputCoverageDir))
+		}
+
 		panic(err)
 	}
 

@@ -8,6 +8,7 @@ This tool might be useful in such situations.
 
 > [!IMPORTANT] 
 > `vendor/bin/phpunit` and `pcov` are required.
+> e.g. `sudo apt-get update && sudo apt-get install phpX.Y-pcov` (X.Y is the PHP version)
 
 ## With this tool,
 1. Select test files to run,

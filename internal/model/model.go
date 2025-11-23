@@ -1,8 +1,6 @@
 package model
 
 import (
-	"fmt"
-
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/ddddddO/puco/internal"
@@ -14,6 +12,7 @@ const (
 	ViewOfSelectCoverageFiles
 	ViewOfYesNo
 	ViewOfCoverageList
+	ViewOfError
 )
 
 var (
@@ -34,6 +33,7 @@ type model struct {
 	selectCoverageFilesView *selectCoverageFilesView
 	yesnoView               *yesnoView
 	coverageListView        *coveragedListView
+	errorView               *errorView
 
 	err error
 }
@@ -55,6 +55,7 @@ func New(cfg internal.Config, shouldRestoreLatestExecutedData bool) (model, erro
 	}
 
 	clv := newCoverageListView()
+	ev := newErrorView()
 
 	return model{
 		currentView: ViewOfSelectTestFiles,
@@ -63,6 +64,7 @@ func New(cfg internal.Config, shouldRestoreLatestExecutedData bool) (model, erro
 		selectCoverageFilesView: cfv,
 		yesnoView:               ynv,
 		coverageListView:        clv,
+		errorView:               ev,
 	}, nil
 }
 
@@ -103,41 +105,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.yesnoView.update(msg, m)
 	case ViewOfCoverageList:
 		return m.coverageListView.update(msg, m)
+	case ViewOfError:
+		return m.errorView.update(msg, m)
 	default:
 		return m, nil
 	}
 }
 
 func (m model) View() string {
-	// 最終結果出力
 	if m.quitting {
-		// var sb strings.Builder
-		// sb.WriteString("Result:\n\n")
-
-		// sb.WriteString("Selected test files:\n")
-		// if len(m.selectTestFilesView.selected) == 0 {
-		// 	sb.WriteString("  (no selected))\n")
-		// } else {
-		// 	for choice := range m.selectTestFilesView.selected {
-		// 		sb.WriteString(fmt.Sprintf("  - %s\n", choice))
-		// 	}
-		// }
-
-		// sb.WriteString("\nSelected coverage target:\n")
-		// if len(m.selectCoverageFilesView.selected) == 0 {
-		// 	sb.WriteString("  (no selected)\n")
-		// } else {
-		// 	for choice := range m.selectCoverageFilesView.selected {
-		// 		sb.WriteString(fmt.Sprintf("  - %s\n", choice))
-		// 	}
-		// }
-
-		// return sb.String()
 		return "end"
-	}
-
-	if m.err != nil {
-		return fmt.Sprintf("failed...: \n%v\n", m.err)
 	}
 
 	switch m.currentView {
@@ -148,7 +125,9 @@ func (m model) View() string {
 	case ViewOfYesNo:
 		return m.yesnoView.view(m.width, m.selectCoverageFilesView)
 	case ViewOfCoverageList:
-		return m.coverageListView.view(m.height)
+		return m.coverageListView.view(m.height, m.width)
+	case ViewOfError:
+		return m.errorView.view(m.err, m.width)
 	default:
 		return "unknown view"
 	}

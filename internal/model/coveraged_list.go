@@ -30,25 +30,13 @@ func (c *coveragedListView) update(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 		case "enter":
 			m.quitting = true
 			return m, tea.Quit
-
-			// case "down", "j":
-			// 	v.cursor++
-			// 	if v.cursor >= len(v.choices) {
-			// 		v.cursor = 0
-			// 	}
-
-			// case "up", "k":
-			// 	v.cursor--
-			// 	if v.cursor < 0 {
-			// 		v.cursor = len(v.choices) - 1
-			// 	}
 		}
 	}
 
 	return m, tea.Quit
 }
 
-func (c *coveragedListView) view(viewHeight int) string {
+func (c *coveragedListView) view(viewHeight int, viewWidth int) string {
 	s := &strings.Builder{}
 	lvl := 2
 	s.WriteString(fmt.Sprintf("\n\n%s\n\n", internal.ColorLightPinkStyle.Render(fmt.Sprintf("===== Cveraged file list (Max depth: %d) =====", lvl+1))))
@@ -56,10 +44,11 @@ func (c *coveragedListView) view(viewHeight int) string {
 	coverages, err := internal.GetCoveragedFilePaths(lvl)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			panic(fmt.Errorf("%s directory did not exist, probably because pcov was not installed.", command.OutputCoverageDir))
+			e := fmt.Errorf("'%s' directory did not exist, probably because pcov was not installed", command.OutputCoverageDir)
+			return temporaryErrorView(e, viewWidth)
 		}
 
-		panic(err)
+		return temporaryErrorView(err, viewWidth)
 	}
 
 	root := gtree.NewRoot(command.OutputCoverageDir)
@@ -78,7 +67,7 @@ func (c *coveragedListView) view(viewHeight int) string {
 	height := max(0, viewHeight-15) // 数は一旦決め打ち。phpunit実行時の出力が多いと表示崩れちゃいそうだけど...
 	for iter, err := range gtree.WalkIterFromRoot(root) {
 		if err != nil {
-			panic(err)
+			return temporaryErrorView(err, viewWidth)
 		}
 
 		if rowCnt > height {

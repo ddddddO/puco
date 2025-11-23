@@ -16,3 +16,8 @@ var ColorBrightGreenStyle = lipgloss.NewStyle().
 var ColorBrightBlueStyle = lipgloss.NewStyle().
 	Foreground(lipgloss.Color("12")).
 	Bold(true)
+
+// error字のタイトル色
+var ColorBrightRedBoldStyle = lipgloss.NewStyle().
+	Foreground(lipgloss.Color("9")).
+	Bold(true)

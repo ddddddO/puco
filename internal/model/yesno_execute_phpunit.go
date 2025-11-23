@@ -40,44 +40,10 @@ func (v *yesnoView) update(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			v.selected = v.choices[v.cursor]
 
 			if v.selected == "Yes" {
-				targetTests := []string{}
-				for s := range m.selectTestFilesView.selected {
-					targetTests = append(targetTests, s)
-				}
-				targetCoverages := []string{}
-				for s := range m.selectCoverageFilesView.selected {
-					targetCoverages = append(targetCoverages, s)
-				}
-				cfg := internal.Config{
-					CommandToSpecifyBeforePHPCommand: v.cmdPHPUnit.CommandToSpecifyBeforePHPCommand,
-					LatestExecutedData: struct {
-						SelectedTestFilePaths       []string
-						SelectedCoverageTargetPaths []string
-					}{
-						SelectedTestFilePaths:       targetTests,
-						SelectedCoverageTargetPaths: targetCoverages,
-					},
-				}
-				if err := internal.StoreConfig(cfg); err != nil {
-					panic(err)
-				}
-
-				if err := os.RemoveAll(command.OutputCoverageDir); err != nil {
-					panic(err)
-				}
-				if _, err := os.Stat(phpunitxml.OutputPHPUnitXML); err == nil {
-					if e := os.Remove(phpunitxml.OutputPHPUnitXML); e != nil {
-						panic(e)
-					}
-				} else {
-					if !os.IsNotExist(err) {
-						panic(err)
-					}
-				}
-
-				// 微妙
-				if err := phpunitxml.Generate(v.cmdPHPUnit.CommandToSpecifyBeforePHPCommand, targetTests, m.selectCoverageFilesView.longestMatchDirPath()); err != nil {
-					panic(err)
+				if err := v.prepare(m); err != nil {
+					m.currentView = ViewOfError
+					m.err = err
+					return m, nil
 				}
 
 				return m, v.cmdPHPUnit.Command()
@@ -103,6 +69,47 @@ func (v *yesnoView) update(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+func (v *yesnoView) prepare(m model) error {
+	targetTests := []string{}
+	for s := range m.selectTestFilesView.selected {
+		targetTests = append(targetTests, s)
+	}
+	targetCoverages := []string{}
+	for s := range m.selectCoverageFilesView.selected {
+		targetCoverages = append(targetCoverages, s)
+	}
+	cfg := internal.Config{
+		CommandToSpecifyBeforePHPCommand: v.cmdPHPUnit.CommandToSpecifyBeforePHPCommand,
+		LatestExecutedData: struct {
+			SelectedTestFilePaths       []string
+			SelectedCoverageTargetPaths []string
+		}{
+			SelectedTestFilePaths:       targetTests,
+			SelectedCoverageTargetPaths: targetCoverages,
+		},
+	}
+
+	if err := internal.StoreConfig(cfg); err != nil {
+		return err
+	}
+
+	if err := os.RemoveAll(command.OutputCoverageDir); err != nil {
+		return err
+	}
+	if _, err := os.Stat(phpunitxml.OutputPHPUnitXML); err == nil {
+		if e := os.Remove(phpunitxml.OutputPHPUnitXML); e != nil {
+			return err
+		}
+	} else {
+		if !os.IsNotExist(err) {
+			return err
+		}
+	}
+
+	// 微妙
+	return phpunitxml.Generate(v.cmdPHPUnit.CommandToSpecifyBeforePHPCommand, targetTests, m.selectCoverageFilesView.longestMatchDirPath())
+}
+
 func (v *yesnoView) view(width int, cfv *selectCoverageFilesView) string {
 	s := strings.Builder{}
 	s.WriteString(fmt.Sprintf("%s\n\n", internal.ColorLightPinkStyle.Render("Execute PHPUnit?")))
@@ -116,7 +123,7 @@ func (v *yesnoView) view(width int, cfv *selectCoverageFilesView) string {
 		// ターミナルの横幅より長いコマンドを改行して表示するため
 		splited, err := splitStringByN(rawCmd, width)
 		if err != nil {
-			panic(err)
+			return temporaryErrorView(err, width)
 		}
 		for i := range splited {
 			s.WriteString(fmt.Sprintf("%s\n", internal.ColorBrightGreenStyle.Render(splited[i])))

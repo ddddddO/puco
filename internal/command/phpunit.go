@@ -1,7 +1,10 @@
 package command
 
 import (
+	"bytes"
 	"fmt"
+	"io"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -9,7 +12,9 @@ import (
 )
 
 type PHPUitFinishedMsg struct {
-	err error
+	Stdout string
+	Stderr string
+	err    error
 }
 
 func (p PHPUitFinishedMsg) Err() error {
@@ -85,7 +90,16 @@ func (c *CmdPHPUnit) RawCmd() string {
 }
 
 func (c *CmdPHPUnit) Command() tea.Cmd {
+	var stdout, stderr bytes.Buffer
+	// リアルタイムでも出力したいのでこうする
+	c.cmd.Stdout = io.MultiWriter(os.Stdout, &stdout)
+	c.cmd.Stderr = io.MultiWriter(os.Stderr, &stderr)
+
 	return tea.ExecProcess(c.cmd, func(err error) tea.Msg {
-		return PHPUitFinishedMsg{err}
+		return PHPUitFinishedMsg{
+			Stdout: stdout.String(),
+			Stderr: stderr.String(),
+			err:    err,
+		}
 	})
 }

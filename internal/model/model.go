@@ -1,6 +1,8 @@
 package model
 
 import (
+	"fmt"
+
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/ddddddO/puco/internal"
@@ -34,6 +36,8 @@ type model struct {
 	yesnoView               *yesnoView
 	coverageListView        *coveragedListView
 	errorView               *errorView
+
+	resultPHPcommand string
 
 	err error
 }
@@ -72,8 +76,8 @@ func (m model) Init() tea.Cmd {
 	return textinput.Blink
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
+func (m model) Update(rawmsg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := rawmsg.(type) {
 	case tea.WindowSizeMsg:
 		m.height = msg.Height
 		m.width = msg.Width
@@ -91,22 +95,25 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 
+		result := rawmsg.(command.PHPUitFinishedMsg)
+
 		m.currentView = ViewOfCoverageList
+		m.resultPHPcommand = fmt.Sprintf("%s\n%s", result.Stdout, result.Stderr)
 		return m, nil
 
 	}
 
 	switch m.currentView {
 	case ViewOfSelectTestFiles:
-		return m.selectTestFilesView.update(msg, m)
+		return m.selectTestFilesView.update(rawmsg, m)
 	case ViewOfSelectCoverageFiles:
-		return m.selectCoverageFilesView.update(msg, m)
+		return m.selectCoverageFilesView.update(rawmsg, m)
 	case ViewOfYesNo:
-		return m.yesnoView.update(msg, m)
+		return m.yesnoView.update(rawmsg, m)
 	case ViewOfCoverageList:
-		return m.coverageListView.update(msg, m)
+		return m.coverageListView.update(rawmsg, m)
 	case ViewOfError:
-		return m.errorView.update(msg, m)
+		return m.errorView.update(rawmsg, m)
 	default:
 		return m, nil
 	}
@@ -125,7 +132,7 @@ func (m model) View() string {
 	case ViewOfYesNo:
 		return m.yesnoView.view(m.width, m.selectCoverageFilesView)
 	case ViewOfCoverageList:
-		return m.coverageListView.view(m.height, m.width)
+		return m.coverageListView.view(m.height, m.width, m.resultPHPcommand)
 	case ViewOfError:
 		return m.errorView.view(m.err, m.width)
 	default:

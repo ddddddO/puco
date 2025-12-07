@@ -69,7 +69,7 @@ func (c *coveragedListView) view(height, width int, phpCommandResult string) str
 		if err != nil {
 			return temporaryErrorView(err, width)
 		}
-		escMsg := "(Esc: quit)"
+		escMsg := "(Enter: quit)"
 		resultTitle := fmt.Sprintf("\n\n%s\n\n", internal.ColorLightPinkStyle.Render("===== Result of PHPUnit ====="))
 		c.content = escMsg + resultTitle + fmt.Sprintf("%s%s\n", phpCommandResult, cn)
 
@@ -124,7 +124,7 @@ func (c *coveragedListView) getContent() (string, error) {
 		}
 		s.WriteString(fmt.Sprintf("  %s\n", iter.Row()))
 	}
-	s.WriteString("\n(Esc: quit)\n")
+	s.WriteString("\n(Enter: quit)\n")
 
 	return s.String(), nil
 }
